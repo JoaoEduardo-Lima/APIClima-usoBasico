@@ -27,6 +27,7 @@ public class ClienteClima implements AutoCloseable {
     private final HttpClient client = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
             .build();
+
     private final ObjectMapper mapper = new ObjectMapper();
 
     public PrevisaoDoCLima buscar(Localizacao local) throws Exception {
@@ -50,7 +51,7 @@ public class ClienteClima implements AutoCloseable {
 
         //
         Instant momentoDaPrevisao = LocalDateTime.parse(atual.time)
-                .atZone(ZoneId.of(local.timezone()))
+                .atZone(ZoneId.of(local.getTimezone()))
                 .toInstant();
 
         // adequa o formato da api pro formato criado
@@ -73,8 +74,8 @@ public class ClienteClima implements AutoCloseable {
                 //monta a URL a partir de um mapa de parâmetros
     private URI montarUri(Localizacao local) {
         Map<String, String> params = new LinkedHashMap<>();
-        params.put("latitude", String.valueOf(local.latitude()));
-        params.put("longitude", String.valueOf(local.longitude()));
+        params.put("latitude", String.valueOf(local.getLatitude()));
+        params.put("longitude", String.valueOf(local.getLongitude()));
         params.put("current", String.join(",",
                 "temperature_2m",
                 "apparent_temperature",
@@ -85,7 +86,7 @@ public class ClienteClima implements AutoCloseable {
                 "wind_direction_10m",
                 "pressure_msl",
                 "cloud_cover"));
-        params.put("timezone", local.timezone());
+        params.put("timezone", local.getTimezone());
 
         String query = params.entrySet().stream()
                 .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), StandardCharsets.UTF_8))
