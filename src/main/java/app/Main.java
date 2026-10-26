@@ -1,14 +1,21 @@
 package app;
 
 import apresentacao.ApresentadorClima;
+import config.HibernateUtil;
+import dao.LocalizacaoDao;
+import dao.LocalizacaoDaoHibernate;
+import dao.PrevisaoDao;
+import dao.PrevisaoDaoHibernate;
 import modelo.Localizacao;
 import modelo.PrevisaoDoCLima;
 import servico.ClienteClima;
+import servico.ColetaService;
+
+
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        // coordenadas aproximadas das cidades principais que vamos demonstrar
         List<Localizacao> cidades = List.of(
                 new Localizacao("São Paulo", -23.55, -46.63, "America/Sao_Paulo"),
                 new Localizacao("Rio de Janeiro", -22.91, -43.17, "America/Sao_Paulo"),
@@ -16,19 +23,18 @@ public class Main {
                 new Localizacao("Salvador", -12.97, -38.50, "America/Sao_Paulo"),
                 new Localizacao("Porto Alegre", -30.03, -51.23, "America/Sao_Paulo"));
 
-
-        ClienteClima client = new ClienteClima();
+        LocalizacaoDao localizacaoDao = new LocalizacaoDaoHibernate(HibernateUtil.getSessionFactory());
+        PrevisaoDao previsaoDao = new PrevisaoDaoHibernate(HibernateUtil.getSessionFactory());
         ApresentadorClima presenter = new ApresentadorClima();
 
-        try(ClienteClima cliente = new ClienteClima()) {
-            for (Localizacao cidade : cidades) {
-                try {
-                    PrevisaoDoCLima previsao = client.buscar(cidade);
-                    presenter.exibir(previsao);
-                } catch (Exception e) {
-                    System.out.println("Falha em " + cidade.getCity() + ": " + e.getMessage());
-                }
+        try (ClienteClima client = new ClienteClima()) {
+            ColetaService coleta = new ColetaService(client, localizacaoDao, previsaoDao);
+
+            for (PrevisaoDoCLima p : coleta.coletar(cidades)) {
+                presenter.exibir(p);
             }
+        } finally {
+            HibernateUtil.fechar();
         }
     }
 }
