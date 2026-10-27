@@ -5,6 +5,7 @@ import modelo.PrevisaoDoCLima;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import java.time.Instant;
 
 import java.util.List;
 
@@ -41,4 +42,18 @@ public class PrevisaoDaoHibernate implements PrevisaoDao {
                     .getResultList();
         }
     }
+
+    @Override
+    public boolean existe(Localizacao localizacao, Instant forecastAt) {
+        try (Session session = sessionFactory.openSession()) {
+            Long total = session.createQuery(
+                            "select count(p) from PrevisaoDoCLima p "
+                                    + "where p.location = :loc and p.forecastAt = :quando", Long.class)
+                    .setParameter("loc", localizacao)
+                    .setParameter("quando", forecastAt)
+                    .getSingleResult();
+            return total > 0;
+        }
+    }
 }
+

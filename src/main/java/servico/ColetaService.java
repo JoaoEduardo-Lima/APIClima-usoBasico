@@ -17,14 +17,17 @@ public class ColetaService {
     private final ClienteClima client;
     private final LocalizacaoDao localizacaoDao;
     private final PrevisaoDao previsaoDao;
+    private final boolean pularRepetidos;
 
-    public ColetaService(ClienteClima client, LocalizacaoDao localizacaoDao, PrevisaoDao previsaoDao) {
+    public ColetaService(ClienteClima client, LocalizacaoDao localizacaoDao,
+                         PrevisaoDao previsaoDao, boolean pularRepetidos) {
         this.client = client;
         this.localizacaoDao = localizacaoDao;
         this.previsaoDao = previsaoDao;
+        this.pularRepetidos = pularRepetidos;
     }
 
-    /** Coleta e grava a previsão de cada cidade. Devolve o que foi gravado. */
+    /** Coleta e grava a previsão de cada cidade. Devolve só o que foi gravado de fato. */
     public List<PrevisaoDoCLima> coletar(List<Localizacao> cidades) {
         List<PrevisaoDoCLima> gravadas = new ArrayList<>();
 
@@ -32,20 +35,24 @@ public class ColetaService {
             try {
                 Localizacao local = garantirLocalizacao(cidade);
                 PrevisaoDoCLima previsao = client.buscar(local);
+
+                if (pularRepetidos && previsaoDao.existe(local, previsao.getForecastAt())) {
+                    LOG.info(cidade.getCity() + ": sem dado novo da API, não gravado");
+                    continue;
+                }
+
                 previsaoDao.salvar(previsao);
                 gravadas.add(previsao);
             } catch (Exception e) {
-                // uma cidade com problema não derruba as outras
                 LOG.log(Level.WARNING, "Falha ao coletar " + cidade.getCity(), e);
             }
         }
         return gravadas;
     }
 
-    // usa a cidade que já está no banco; se não existir, cadastra
     private Localizacao garantirLocalizacao(Localizacao cidade) {
         return localizacaoDao.buscarPorCidade(cidade.getCity()).orElseGet(() -> {
-            localizacaoDao.salvar(cidade);   // depois do salvar, a cidade passa a ter id
+            localizacaoDao.salvar(cidade);
             return cidade;
         });
     }

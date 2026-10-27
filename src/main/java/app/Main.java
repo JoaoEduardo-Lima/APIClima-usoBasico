@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 public class Main {
 
     private static final Logger LOG = Logger.getLogger(Main.class.getName());
+    private static final boolean PULAR_REPETIDOS = true;   // false = grava a cada 10 s, mesmo repetido
     private static final long INTERVALO_SEGUNDOS = 10;
 
     public static void main(String[] args) {
@@ -34,7 +35,7 @@ public class Main {
         LocalizacaoDao localizacaoDao = new LocalizacaoDaoHibernate(HibernateUtil.getSessionFactory());
         PrevisaoDao previsaoDao = new PrevisaoDaoHibernate(HibernateUtil.getSessionFactory());
         ClienteClima client = new ClienteClima();
-        ColetaService coleta = new ColetaService(client, localizacaoDao, previsaoDao);
+        ColetaService coleta = new ColetaService(client, localizacaoDao, previsaoDao, PULAR_REPETIDOS);
         ApresentadorClima presenter = new ApresentadorClima();
 
         ScheduledExecutorService agendador = Executors.newSingleThreadScheduledExecutor();
