@@ -3,37 +3,34 @@ package api;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-// Responsavel por receber os dados da api em forma de JSON e transforma os valores em objetos java
-// chamado dps pela PrevisaoResposta como forma de receber todas as infos relevantes de maneira junta
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CondicaoAtual {
     public String time;
 
     @JsonProperty("temperature_2m")
-    public double temperatura;
+    public Double temperatura;
 
     @JsonProperty("apparent_temperature")
-    public double sensacaoTermica;
+    public Double sensacaoTermica;
 
     @JsonProperty("relative_humidity_2m")
-    public int umidade;
+    public Integer umidade;
 
     @JsonProperty("precipitation")
-    public double precipitacao;
+    public Double precipitacao;
 
     @JsonProperty("weather_code")
-    public int codigoTempo;
+    public Integer codigoTempo;
 
     @JsonProperty("wind_speed_10m")
-    public double vento;
+    public Double vento;
 
     @JsonProperty("wind_direction_10m")
-    public double direcaoVento;
+    public Double direcaoVento;
 
     @JsonProperty("pressure_msl")
-    public double pressao;
+    public Double pressao;
 
     @JsonProperty("cloud_cover")
-    public double nuvens;
+    public Double nuvens;
 }
