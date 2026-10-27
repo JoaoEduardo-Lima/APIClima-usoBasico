@@ -3,6 +3,9 @@ package api;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+// Responsavel por receber os dados da api em forma de JSON e transforma os valores em objetos java
+// chamado dps pela PrevisaoResposta como forma de receber todas as infos relevantes de maneira junta
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CondicaoAtual {
     public String time;

@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// estrutura com autocloseable para permitir try with resources permitindo com que o client feche conexoes q ficariam abertas
 public class ClienteClima implements AutoCloseable {
 
     private static final String BASE_URL = "https://api.open-meteo.com/v1/forecast";
