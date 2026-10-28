@@ -25,7 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ClienteClima implements AutoCloseable {
+public class ClienteClima implements FonteDeClima {
 
     private static final String BASE_URL = "https://api.open-meteo.com/v1/forecast";
     private static final int MAX_TENTATIVAS = 3;

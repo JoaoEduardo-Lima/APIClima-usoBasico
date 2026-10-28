@@ -21,7 +21,7 @@ public class ColetaService {
     private static final Logger LOG = Logger.getLogger(ColetaService.class.getName());
     private static final int LIMITE_ALERTA = 5;   // falhas seguidas até o alerta forte
 
-    private final ClienteClima client;
+    private final FonteDeClima fonte;
     private final LocalizacaoDao localizacaoDao;
     private final PrevisaoDao previsaoDao;
     private final boolean pularRepetidos;
@@ -29,9 +29,9 @@ public class ColetaService {
     // cidade -> quantas falhas seguidas
     private final Map<String, Integer> falhasSeguidas = new ConcurrentHashMap<>();
 
-    public ColetaService(ClienteClima client, LocalizacaoDao localizacaoDao,
+    public ColetaService(FonteDeClima fonte, LocalizacaoDao localizacaoDao,
                          PrevisaoDao previsaoDao, boolean pularRepetidos) {
-        this.client = client;
+        this.fonte = fonte;
         this.localizacaoDao = localizacaoDao;
         this.previsaoDao = previsaoDao;
         this.pularRepetidos = pularRepetidos;
@@ -44,7 +44,7 @@ public class ColetaService {
             String nome = cidade.getCity();
             try {
                 Localizacao local = garantirLocalizacao(cidade);
-                PrevisaoDoCLima previsao = client.buscar(local);
+                PrevisaoDoCLima previsao = fonte.buscar(local);
 
                 if (pularRepetidos && previsaoDao.existe(local, previsao.getForecastAt())) {
                     LOG.info(nome + ": sem dado novo da API, não gravado");

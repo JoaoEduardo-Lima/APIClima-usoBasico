@@ -8,8 +8,11 @@ import dao.PrevisaoDao;
 import dao.PrevisaoDaoHibernate;
 import modelo.Localizacao;
 import modelo.PrevisaoDoCLima;
-import servico.ColetaService;
 import servico.ClienteClima;
+import servico.ColetaService;
+import servico.FonteDeClima;
+import simulacao.Cenario;
+import simulacao.ClienteSimulado;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -21,10 +24,30 @@ import java.util.logging.Logger;
 public class Main {
 
     private static final Logger LOG = Logger.getLogger(Main.class.getName());
-    private static final boolean PULAR_REPETIDOS = true;   // false = grava a cada 10 s, mesmo repetido
     private static final long INTERVALO_SEGUNDOS = 10;
+    private static final boolean PULAR_REPETIDOS = true;   // false = grava a cada 10 s, mesmo repetido
 
     public static void main(String[] args) {
+        // argumentos: --simulacao  e  --cenario=tempestade
+        boolean simulacao = false;
+        Cenario cenario = Cenario.DIA_CALMO;
+        for (String arg : args) {
+            if (arg.equals("--simulacao")) {
+                simulacao = true;
+            } else if (arg.startsWith("--cenario=")) {
+                cenario = Cenario.deTexto(arg.substring("--cenario=".length()));
+            }
+        }
+
+        FonteDeClima fonte;
+        if (simulacao) {
+            fonte = new ClienteSimulado(cenario);
+            LOG.warning("MODO SIMULAÇÃO ativo. Cenário: " + cenario + ". Os dados NÃO são reais.");
+        } else {
+            fonte = new ClienteClima();
+            LOG.info("Modo real: coletando da Open-Meteo.");
+        }
+
         List<Localizacao> cidades = List.of(
                 new Localizacao("São Paulo", -23.55, -46.63, "America/Sao_Paulo"),
                 new Localizacao("Rio de Janeiro", -22.91, -43.17, "America/Sao_Paulo"),
@@ -34,8 +57,7 @@ public class Main {
 
         LocalizacaoDao localizacaoDao = new LocalizacaoDaoHibernate(HibernateUtil.getSessionFactory());
         PrevisaoDao previsaoDao = new PrevisaoDaoHibernate(HibernateUtil.getSessionFactory());
-        ClienteClima client = new ClienteClima();
-        ColetaService coleta = new ColetaService(client, localizacaoDao, previsaoDao, PULAR_REPETIDOS);
+        ColetaService coleta = new ColetaService(fonte, localizacaoDao, previsaoDao, PULAR_REPETIDOS);
         ApresentadorClima presenter = new ApresentadorClima();
 
         ScheduledExecutorService agendador = Executors.newSingleThreadScheduledExecutor();
@@ -47,15 +69,12 @@ public class Main {
                     presenter.exibir(p);
                 }
             } catch (Exception e) {
-                // sem este catch, uma exceção cancela TODAS as próximas execuções, em silêncio
                 LOG.log(Level.SEVERE, "Erro inesperado na coleta", e);
             }
         };
 
-        // primeira coleta imediata; depois, 10 s após o FIM de cada coleta
         agendador.scheduleWithFixedDelay(tarefa, 0, INTERVALO_SEGUNDOS, TimeUnit.SECONDS);
 
-        // roda quando o programa é encerrado (Ctrl+C, por exemplo)
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             LOG.info("Encerrando o coletor...");
             agendador.shutdown();
@@ -67,7 +86,7 @@ public class Main {
                 agendador.shutdownNow();
                 Thread.currentThread().interrupt();
             }
-            client.close();
+            fonte.close();
             HibernateUtil.fechar();
         }));
     }
