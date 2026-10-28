@@ -1,25 +1,39 @@
 package servico;
 
+//Exceção usada para tratar resposta malformada da API
 import com.fasterxml.jackson.core.JsonProcessingException;
+//Interface dos DAO
 import dao.LocalizacaoDao;
 import dao.PrevisaoDao;
+//Exceção genérica do JPA/Hibernate para erros de banco
 import jakarta.persistence.PersistenceException;
+//Entidades de Dominio
 import modelo.Localizacao;
 import modelo.PrevisaoDoCLima;
 
+//Exceções de rede
 import java.net.ConnectException;
 import java.net.http.HttpTimeoutException;
+
+//estruturas de dado para montar resultados
 import java.util.ArrayList;
 import java.util.List;
+
+//Map para Contador de Falhas
 import java.util.Map;
+//garante thread safety o agendado pode rodar em outra thread
 import java.util.concurrent.ConcurrentHashMap;
+
+//API log padrao
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+//Classe de serviço q organiza a coleta
 public class ColetaService {
 
+    //Logger nomeado com o FQN da classe.
     private static final Logger LOG = Logger.getLogger(ColetaService.class.getName());
-    private static final int LIMITE_ALERTA = 5;   // falhas seguidas até o alerta forte
+    private static final int LIMITE_ALERTA = 5;   // 5 falhas seguidas até o alerta forte
 
     private final FonteDeClima fonte;
     private final LocalizacaoDao localizacaoDao;
